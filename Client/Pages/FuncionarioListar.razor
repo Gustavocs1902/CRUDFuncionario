@@ -1,0 +1,78 @@
+﻿@page "/listarfuncionario"
+@using Shared.Models
+@inject HttpClient httpClient
+
+<h3 class="text-center">Lista de Funcionarios</h3>
+
+<div class="p-3 shadow d-flex justify-content-center">
+    <label class="p-2">Procure funcionario:</label>
+    <input class="form-control text-center" @bind-value="palavra"/>
+    <button class="btn btn-primary ms-1" @onclick="Carregar">Carregar</button>
+</div>
+
+
+<div class="text-center p-3">
+    <table class="table">
+        <tr>
+            <td class="border">#</td>
+            <td class="border">Nome</td>
+            <td class="border">Telefone</td>
+            <td class="border">RG</td>
+            <td class="border">Endereco</td>
+            <td class="border">Salario</td>
+            <td class="border">Horas Extras</td>
+            <td class="border">Salário Total</td>
+        </tr>
+
+            @foreach (FuncionariosDb p in Funcionarios)
+            {
+                <tr>
+                    <td class="border">@p.Id</td>
+                    <td class ="border">@p.Nome</td>
+                    <td class ="border">@p.Telefone</td>
+                    <td class="border">@p.RG</td>
+                    <td class="border">@p.Endereco</td>
+                    <td class="border">@p.Salario</td>
+                    <td class="border">@p.HorasExtras</td>
+                    <td class="border">@SalarioTotal(p.Salario, p.HorasExtras).ToString("C")</td>
+                </tr>
+            }
+    </table>
+
+</div>
+
+
+<div class="text-center p-3 text-danger">
+    @msg
+</div>
+
+@code {
+    private List<FuncionariosDb>? Funcionarios = new();
+    private string msg = "";
+    string palavra = "";
+    private decimal SalarioTotal(decimal Salario, int HorasExtras)
+    {
+        return Salario + (Salario * 0.05m * HorasExtras);
+    }
+
+
+    protected async Task Carregar()
+    {
+        string api = "api/Funcionarios/listar";
+        if (!string.IsNullOrEmpty(palavra))
+        {
+            api = $"api/Funcionarios/listar?nome={palavra}";
+        }
+
+        HttpResponseMessage response = await httpClient.GetAsync(api);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Funcionarios = await response.Content.ReadFromJsonAsync<List<FuncionariosDb>>();
+        }
+        else
+        {
+            msg = await response.Content.ReadAsStringAsync();
+        }
+    }
+}

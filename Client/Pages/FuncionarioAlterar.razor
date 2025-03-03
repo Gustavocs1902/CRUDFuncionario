@@ -1,0 +1,104 @@
+﻿@page "/alterarfuncionario"
+@using Shared.Models
+@inject HttpClient httpClient
+
+
+<h3>Alterar funcionarios</h3>
+
+<div class="shadow p-3">
+
+    <label>
+        Id do Funcionario:
+        <InputNumber class="form-control"
+        @bind-Value="funcionarioId">
+        </InputNumber>
+    </label>
+
+    <div class="mt-2">
+        <button class="btn btn-primary" @onclick="Consultar">Consultar</button>
+    </div>
+
+    <hr />
+
+    <EditForm Model="funcionario" OnValidSubmit="Alterar" class="d-flex flex-column">
+        <label class="mt-2">
+            Nome:
+            <InputText class="form-control" @bind-Value="funcionario.Nome"></InputText>
+        </label>
+        <label class="mt-2">
+            Telefone:
+            <InputText class="form-control" @bind-Value="funcionario.Telefone"></InputText>
+        </label>
+        <label class="mt-2">
+            Rg:
+            <InputText class="form-control" @bind-Value="funcionario.RG"></InputText>
+        </label>
+        <label class="mt-2">
+            Endereço:
+            <InputText class="form-control" @bind-Value="funcionario.Endereco"></InputText>
+        </label>
+        <label class="mt-2">
+            Salário:
+            <InputNumber class="form-control" @bind-Value="funcionario.Salario"></InputNumber>
+        </label>
+        <label class="mt-2">
+            Horas Extras:
+            <InputNumber class="form-control" @bind-Value="funcionario.HorasExtras"></InputNumber>
+        </label>
+
+        <div class="mt-2">
+            <button class="btn btn-primary" type="submit">Alterar</button>
+        </div>
+
+        <div class="text-center p-3 text-success">
+            @msg
+        </div>
+    </EditForm>
+
+</div>
+
+@code {
+
+    int funcionarioId;
+    string msg = "";
+    FuncionariosDb funcionario = new();
+
+    protected async Task Consultar()
+    {
+        string api = $"api/Funcionarios/consultar/{funcionarioId}";
+        HttpResponseMessage response = await httpClient.GetAsync(api);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            msg = await response.Content.ReadAsStringAsync();
+            funcionario = new();
+
+        }
+        else
+        {
+            funcionario = await response.Content.ReadFromJsonAsync<FuncionariosDb>();
+        }
+    }
+    protected async Task Alterar()
+    {
+        if (funcionario == null)
+        {
+            msg = "Funcionario está nulo.";
+        }
+
+        string api = "api/Funcionarios/alterar";
+        HttpResponseMessage responseMessage = await httpClient.PutAsJsonAsync<FuncionariosDb>(api, funcionario);
+
+        if (responseMessage.IsSuccessStatusCode)
+        {
+
+            msg = "Informações alteradas com sucesso";
+
+        }
+        else
+        {
+           
+            msg = $"Não foi possivel acessar a API{api}";
+        }
+    }
+}

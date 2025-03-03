@@ -1,0 +1,100 @@
+﻿@page "/adicionarfuncionario"
+
+@using Shared.Models
+@inject HttpClient httpClient
+
+<h3>Inclusão de Funcionario</h3>
+
+<div class="shadow p-5">
+    <EditForm Model="funcionario" OnValidSubmit="Incluir" class="d-flex flex-column">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <label class="mt-2">
+            Nome:
+            <InputText class="form-control" @bind-Value="funcionario.Nome"></InputText>
+            <ValidationMessage For="@(() => funcionario.Nome)" />
+        </label>
+
+        <label class="mt-2">
+            Rg:
+            <InputText class="form-control" @bind-Value="funcionario.RG"></InputText>
+            <ValidationMessage For="@(() => funcionario.RG)" />
+        </label>
+
+        <label class="mt-2">
+            Endereco:
+            <InputText class="form-control" @bind-Value="funcionario.Endereco"></InputText>
+            <ValidationMessage For="@(() => funcionario.Endereco)" />
+        </label>
+
+        <label class="mt-2">
+            Telefone:
+            <InputText class="form-control" @bind-Value="funcionario.Telefone"></InputText>
+            <ValidationMessage For="@(() => funcionario.Telefone)" />
+        </label>
+
+        <label class="mt-2">
+            Salario:
+            <InputNumber class="form-control" @bind-Value="funcionario.Salario"></InputNumber>
+        </label>
+
+        <div class="mt-2">
+            <button class="btn btn-primary" type="submit">@(isLoading ? "Incluindo..." : "Incluir")</button>
+        </div>
+
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(msg))
+    {
+        <div class="text-center p-3" style="color: @(isSuccess ? "green" : "red")">
+            @msg
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    FuncionariosDb funcionario = new();
+    string msg = "";
+    bool isSuccess = false;
+    bool isLoading = false;
+
+    private async Task Incluir()
+    {
+        isLoading = true;
+        msg = "";
+        isSuccess = false;
+        StateHasChanged();
+
+        try
+        {
+            string api = "api/Funcionarios/incluir";
+            HttpResponseMessage response = await httpClient.PostAsJsonAsync<FuncionariosDb>(api, funcionario);
+
+            if (response.IsSuccessStatusCode)
+            {
+                msg = "Funcionario Adicionado";
+                isSuccess = true;
+                funcionario = new();
+            }
+            else
+            {
+                msg = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            msg = $"Erro ao conectar com o servidor: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+
+    }
+}
+
